@@ -9,7 +9,8 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "test": "node --experimental-vm-modules node_modules/.bin/jest"
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "publish": "npm run clean && npm run build && npm publish --access=public"
   },
   "author": "Ksenia Balistreri",
   "license": "MIT",
