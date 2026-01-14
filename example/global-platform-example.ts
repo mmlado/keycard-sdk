@@ -1,11 +1,10 @@
 import { Keycard } from "../src/index"
 import { GlobalPlatform } from "../src/global-platform"
-import { CardReader, Status } from "@nonth/pcsclite";
+import pcsclite, { CardReader, Status } from "@nonth/pcsclite";
+import fs from "fs";
+import process from "process";
 
-const pcsclite = require('@nonth/pcsclite');
 const pcsc = pcsclite();
-const process = require("process");
-const fs = require("fs");
 
 function hx(arr: Uint8Array) : string {
   return Buffer.from(arr).toString('hex');

@@ -1,9 +1,9 @@
 import { Keycard } from "../src/index"
 import { RecoverableSignatureProps } from "../src/types/recoverable-signature-types";
+import pcsclite from "@nonth/pcsclite";
+import process from "process";
 
-const pcsclite = require('@nonth/pcsclite');
 const pcsc = pcsclite();
-const process = require("process");
 
 function hx(arr: Uint8Array) : string {
   return Buffer.from(arr).toString('hex');
