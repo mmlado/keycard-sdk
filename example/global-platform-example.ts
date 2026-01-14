@@ -1,7 +1,8 @@
 import { Keycard } from "../src/index"
 import { GlobalPlatform } from "../src/global-platform"
+import { CardReader, Status } from "@nonth/pcsclite";
 
-const pcsclite = require("@pokusew/pcsclite");
+const pcsclite = require('@nonth/pcsclite');
 const pcsc = pcsclite();
 const process = require("process");
 const fs = require("fs");
@@ -10,13 +11,13 @@ function hx(arr: Uint8Array) : string {
   return Buffer.from(arr).toString('hex');
 }
 
-function createGlobalPlatformChannel(): any {
-  pcsc.on('reader', function (reader) {
-    reader.on('error', function (err) {
+function createGlobalPlatformChannel(): void {
+  pcsc.on('reader', function (reader: CardReader) {
+    reader.on('error', function (err: string) {
       throw new Error(err);
     });
 
-    reader.on('status', function (status) {
+    reader.on('status', function(status: Status) {
       let changes = reader.state ^ status.state;
 
       if (!changes) {

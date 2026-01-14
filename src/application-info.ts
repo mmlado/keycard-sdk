@@ -1,6 +1,6 @@
-import { BERTLV } from "./ber-tlv"
-import { CryptoUtils } from "./crypto-utils"
-import { Constants } from "./constants"
+import { BERTLV } from "./ber-tlv.ts"
+import { CryptoUtils } from "./crypto-utils.ts"
+import { Constants } from "./constants.ts"
 
 
 const TLV_UID = 0x8f;
@@ -16,11 +16,11 @@ const CAPABILITIES_ALL = CAPABILITY_SECURE_CHANNEL | CAPABILITY_KEY_MANAGEMENT |
 
 export class ApplicationInfo {
   initializedCard: boolean;
-  instanceUID: Uint8Array;
+  instanceUID!: Uint8Array;
   secureChannelPubKey: Uint8Array;
-  appVersion: number;
-  freePairingSlots: number;
-  keyUID: Uint8Array;
+  appVersion!: number;
+  freePairingSlots!: number;
+  keyUID!: Uint8Array;
   capabilities: number;
 
   constructor(tlvData: Uint8Array) {

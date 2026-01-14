@@ -1,15 +1,15 @@
-import { CardChannel } from "./card-channel"
-import { SecureChannel } from "./secure-channel"
-import { ApplicationInfo } from "./application-info"
-import { Pairing } from "./pairing"
-import { APDUResponse } from "./apdu-response"
-import { APDUCommand } from "./apdu-command"
-import { CryptoUtils } from "./crypto-utils"
-import { BIP32KeyPair } from "./bip32key"
-import { KeyPath } from "./key-path"
-import { Constants } from "./constants"
-
-const CryptoJS = require("crypto-js");
+import { CardChannel } from "./card-channel.ts"
+import { SecureChannel } from "./secure-channel.ts"
+import { ApplicationInfo } from "./application-info.ts"
+import { Pairing } from "./pairing.ts"
+import { APDUResponse } from "./apdu-response.ts"
+import { APDUCommand } from "./apdu-command.ts"
+import { CryptoUtils } from "./crypto-utils.ts"
+import { BIP32KeyPair } from "./bip32key.ts"
+import { KeyPath } from "./key-path.ts"
+import { Constants } from "./constants.ts"
+import { pbkdf2 } from "@noble/hashes/pbkdf2"
+import { sha256 } from "@noble/hashes/sha2"
 
 const INS_INIT = 0xfe;
 const INS_GET_STATUS = 0xf2;
@@ -55,7 +55,7 @@ const KEYCARD_AID = new Uint8Array([0xa0, 0x00, 0x00, 0x08, 0x04, 0x00, 0x01, 0x
 export class Commandset {
   apduChannel: CardChannel;
   secureChannel: SecureChannel;
-  applicationInfo: ApplicationInfo;
+  applicationInfo: ApplicationInfo | null;
 
   constructor(channel: CardChannel) {
     this.apduChannel = channel;
@@ -68,7 +68,7 @@ export class Commandset {
   }
 
   getPairing() : Pairing {
-    return this.secureChannel.pairing;
+    return this.secureChannel.pairing!;
   }
 
   setPairing(pairing: Pairing) : void {
@@ -80,7 +80,7 @@ export class Commandset {
     let resp = await this.apduChannel.send(selectApplet);
 
     if (resp.sw == 0x9000) {
-      this.applicationInfo = new ApplicationInfo(resp.data);
+      this.applicationInfo = new ApplicationInfo(resp.data!);
 
       if (this.applicationInfo.hasSecureChannelCapability()) {
         this.secureChannel.generateSecret(this.applicationInfo.secureChannelPubKey);
@@ -98,11 +98,9 @@ export class Commandset {
   pairingPasswordToSecret(pairingPassword: string) : Uint8Array {
     let salt = "Keycard Pairing Password Salt";
     let iterationCount = 50000;
-    let kSize = 256 / 32;
-    let PBKDF2WordArr = CryptoJS.PBKDF2(pairingPassword, salt, {keySize: kSize, iterations: iterationCount, hasher: CryptoJS.algo.SHA256});
-    let PBKDF2Bytes = CryptoUtils.wordArrayToByteArray(PBKDF2WordArr);
+    let kSize = 32;
 
-    return PBKDF2Bytes;
+    return pbkdf2(sha256, pairingPassword, salt, { c: iterationCount, dkLen: kSize });
   }
 
   async autoPair(pairingData: string | Uint8Array) : Promise<void> {
@@ -292,7 +290,7 @@ export class Commandset {
   }
 
   async setNDEF(ndef: Uint8Array) : Promise<APDUResponse> {
-    if ((this.applicationInfo.appVersion >> 8) > 2) {
+    if ((this.applicationInfo!.appVersion! >> 8) > 2) {
       if ((ndef.byteLength - 2) != ((ndef[0] << 8) | ndef[1])) {
         let tmp = new Uint8Array(ndef.byteLength + 2);
         tmp[0] = ndef.byteLength >> 8;

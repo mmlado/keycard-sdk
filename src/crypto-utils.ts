@@ -1,11 +1,5 @@
-const secp256k1 = require("secp256k1");
-
-declare global {
-  interface Window{
-     msCrypto: Crypto;
-  }
-}
-
+import { randomBytes } from '@noble/hashes/utils';
+import * as secp from '@noble/secp256k1';
 export namespace CryptoUtils {
   export function wordArrayToByteArray(wordArray: any) : Uint8Array {
     let words = wordArray.words;
@@ -39,22 +33,11 @@ export namespace CryptoUtils {
   }
 
   export function generateECPrivateKey() {
-    while (true) {
-      let privKey = getRandomBytes(32);
-      if (secp256k1.privateKeyVerify(privKey)) return privKey;
-    }
+    return secp.utils.randomSecretKey();
   }
 
   export function getRandomBytes(size: number) : Uint8Array {
-    if ((typeof window !== 'undefined') && (window.crypto || window.msCrypto)) {
-      let crypto = window.crypto || window.msCrypto;
-      let a = new Uint8Array(size);
-      crypto.getRandomValues(a);
-      return a;
-    } else {
-      let crypto = require("crypto");
-      return crypto.randomBytes(size);
-    }
+    return randomBytes(size);
   }
 
   export function checkAllDigits(value: string) : boolean {
@@ -62,6 +45,6 @@ export namespace CryptoUtils {
   }
 
   export function compressPublicKey(pubkey: Uint8Array) : Uint8Array {
-    return secp256k1.publicKeyConvert(pubkey, true, new Uint8Array(33));
+    return secp.Point.fromBytes(pubkey).toBytes();
   }
 }

@@ -1,13 +1,13 @@
-import { MnemonicEnglishDictionary } from "./mnemonic-english-dictionary"
-import { CryptoUtils } from "./crypto-utils"
-import { BIP32KeyPair } from "./bip32key";
+import { MnemonicEnglishDictionary } from "./mnemonic-english-dictionary.ts"
+import { BIP32KeyPair } from "./bip32key.ts";
+import { sha512 } from "@noble/hashes/sha2";
+import { pbkdf2 } from "@noble/hashes/pbkdf2";
 
 const WORDLIST_SIZE = 2048;
-const CryptoJS = require("crypto-js")
 
 export class Mnemonic {
   indexes: number[];
-  wordlist: string[];
+  wordlist!: string[];
 
   constructor(data: Uint8Array) {
     this.indexes = new Array(data.length/2);
@@ -51,10 +51,9 @@ export class Mnemonic {
   public static toBinarySeed(mnemonicPhrase: string, password = "") : Uint8Array {
     let salt = "mnemonic" + password;
     let iterationCount = 2048;
-    let kSize = 512 / 32;
-    let PBKDF2WordArr = CryptoJS.PBKDF2(mnemonicPhrase, salt, {keySize: kSize, iterations: iterationCount, hasher: CryptoJS.algo.SHA512});
+    let kSize = 64;
 
-    return CryptoUtils.wordArrayToByteArray(PBKDF2WordArr);
+    return pbkdf2(sha512, mnemonicPhrase, salt, { c: iterationCount, dkLen: kSize });
   }
 
   toBinarySeed(password = "") : Uint8Array {
