@@ -1,6 +1,6 @@
 {
   "name": "keycard-sdk",
-  "version": "3.1.0",
+  "version": "3.1.1",
   "description": "Keycard Typescript SDK",
   "type": "module",
   "main": "dist/index.js",
@@ -20,7 +20,8 @@
     "@noble/secp256k1": "^3.0.0",
     "@nonth/pcsclite": "^0.6.2",
     "crypto-js": "^4.2.0",
-    "jszip": "^3.10.1"
+    "jszip": "^3.10.1",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",
@@ -29,7 +30,6 @@
     "@types/node": "^25.0.7",
     "jest": "^30.2.0",
     "ts-jest": "^29.4.6",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
+    "ts-node": "^10.9.2"
   }
 }
