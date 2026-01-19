@@ -1,5 +1,3 @@
-import {toBase64, fromBase64} from '@jsonjoy.com/base64';
-
 export class Pairing {
   pairingKey: Uint8Array;
   pairingIndex: number;
@@ -14,7 +12,7 @@ export class Pairing {
   }
 
   static fromString(base64Str: string) : Pairing {
-    let bytes = fromBase64(base64Str);
+    let bytes = Buffer.from(base64Str, 'base64');
     return this.fromBytes(bytes);
   }
 
@@ -26,6 +24,6 @@ export class Pairing {
   }
 
   toBase64() : string {
-    return toBase64(this.toByteArray());
+    return Buffer.from(this.toByteArray()).toString('base64');
   }
 }
