@@ -27,6 +27,7 @@ const INS_GENERATE_KEY = 0xd4;
 const INS_SET_PINLESS_PATH = 0xc1;
 const INS_EXPORT_KEY = 0xc2;
 const INS_GET_DATA = 0xca;
+const INS_FACTORY_RESET = 0xfd;
 
 const CHANGE_PIN_P1_USER_PIN = 0x00;
 const CHANGE_PIN_P1_PUK = 0x01;
@@ -49,6 +50,9 @@ const EXPORT_KEY_P1_DERIVE_AND_MAKE_CURRENT = 0x02;
 
 const EXPORT_KEY_P2_PRIVATE_AND_PUBLIC = 0x00;
 const EXPORT_KEY_P2_PUBLIC_ONLY = 0x01;
+
+const FACTORY_RESET_P1_MAGIC = 0xaa;
+const FACTORY_RESET_P2_MAGIC = 0x55;
 
 
 export class Commandset {
@@ -322,4 +326,8 @@ export class Commandset {
     return this.apduChannel.send(init);
   }
 
+  async factoryReset(): Promise<APDUResponse> {
+    let factoryReset = new APDUCommand(0x80, INS_FACTORY_RESET, FACTORY_RESET_P1_MAGIC, FACTORY_RESET_P2_MAGIC, new Uint8Array(0));
+    return this.apduChannel.send(factoryReset);
+  }  
 }
