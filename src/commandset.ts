@@ -309,6 +309,7 @@ export class Commandset {
     }
   }
 
+  //TODO: Add suport for Duress PIN
   async init(pin: string, puk: string, sharedSecret: string | Uint8Array) : Promise<APDUResponse> {
     if (typeof sharedSecret === "string") {
       sharedSecret = this.pairingPasswordToSecret(sharedSecret);
