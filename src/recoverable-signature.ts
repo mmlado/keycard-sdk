@@ -33,9 +33,8 @@ export class RecoverableSignature {
     props.r = RecoverableSignature.toUInt(tlv.readPrimitive(Constants.TLV_INT));
     props.s = RecoverableSignature.toUInt(tlv.readPrimitive(Constants.TLV_INT));
     props.compressed = false;
-    props.recId = this.calculateRecID(hash);
-
-    Object.assign(this, {publicKey: props.publicKey, rectId: props.recId, r: props.r, s: props.s, compressed: props.compressed});
+    Object.assign(this, {publicKey: props.publicKey, r: props.r, s: props.s, compressed: props.compressed});
+    Object.assign(this, {recId: this.calculateRecID(hash)});
   }
 
   calculateRecID(hash: Uint8Array): number {
@@ -63,9 +62,9 @@ export class RecoverableSignature {
 
   recoverFromSignature(recId: number, hash: Uint8Array, r: Uint8Array, s: Uint8Array, compressed: boolean): Uint8Array {
     let signature = new Uint8Array(this.r!.byteLength + this.s!.byteLength + 1);
-    signature.set(r, 0);
-    signature.set(s, r.byteLength);
-    signature[65] = recId;
+    signature[0] = recId;
+    signature.set(r, 1);
+    signature.set(s, 1+r.byteLength);
     let compressedKey = secp.recoverPublicKey(signature, hash, {prehash: false});
 
     if (compressed) {

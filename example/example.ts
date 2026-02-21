@@ -37,7 +37,7 @@ function createChannel(): any {
                 (await cmdSet.select()).checkOK();
 
                 if (cmdSet.applicationInfo.initializedCard == false) {
-                    (await cmdSet.init("123456", "123456123456", "KeycardTest")).checkOK();
+                    (await cmdSet.init("123456", "123456123456", "KeycardDefaultPairing")).checkOK();
                     (await cmdSet.select()).checkOK();
                 }
 
@@ -60,7 +60,7 @@ function createChannel(): any {
                 console.log("Has NDEF capability: " + cmdSet.applicationInfo.hasNDEFCapability());
 
                 console.log("Pairing");
-                await cmdSet.autoPair("KeycardTest");
+                await cmdSet.autoPair("KeycardDefaultPairing");
 
                 let pairing = cmdSet.getPairing();
                 console.log("Pairing with card is done.");
