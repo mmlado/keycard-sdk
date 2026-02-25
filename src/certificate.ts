@@ -42,14 +42,14 @@ export class Certificate extends RecoverableSignature {
     return Certificate.createCertificate(caPair, Certificate.generateIdentKeyPair());
   }
 
-  fromTLV(certData: Uint8Array): Certificate {
+  public static fromTLV(certData: Uint8Array): Certificate {
       let pubKey = certData.subarray(0, 33);
       let r = certData.subarray(33, 65);
       let s = certData.subarray(65, 97);
       let recId = certData[97];
 
       let hash = sha256(pubKey);
-      let caPub = this.recoverFromSignature(recId, hash, r, s, true);
+      let caPub = RecoverableSignature.recoverFromSignature(recId, hash, r, s, true);
 
       let cert = new Certificate(caPub, true, r, s, recId);
       cert.identPub = pubKey;
@@ -57,14 +57,22 @@ export class Certificate extends RecoverableSignature {
       return cert;
   }
 
-  verifyIdentity(hash: Uint8Array, tlvData: Uint8Array): Uint8Array {
+  public static verifyIdentity(hash: Uint8Array, tlvData: Uint8Array): Uint8Array {
     let tlv = new BERTLV(tlvData);
     tlv.enterConstructed(Constants.TLV_SIGNATURE_TEMPLATE);
     let certData = tlv.readPrimitive(TLV_CERT);
-    let cert = this.fromTLV(certData);
-    let signature = tlv.peekUnread();
-    let verified = secp.verify(signature, hash, cert.identPub, { prehash: false });
+    let cert = Certificate.fromTLV(certData);
+    
+    tlv.enterConstructed(Constants.TLV_ECDSA_TEMPLATE);
 
+    const r = RecoverableSignature.toUInt(tlv.readPrimitive(Constants.TLV_INT));
+    const s = RecoverableSignature.toUInt(tlv.readPrimitive(Constants.TLV_INT));
+
+    const signature = new Uint8Array(64);
+    signature.set(r, 0);
+    signature.set(s, r.length);
+
+    let verified = secp.verify(signature, hash, cert.identPub, { prehash: false, lowS: false });
 
     if (!verified) {
       throw new Error("Error verifying signature.");
