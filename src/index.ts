@@ -20,6 +20,8 @@ import { IdentComandset } from "./ident-comandset.ts"
 import type * as RecoverableSignatureTypes from "./types/recoverable-signature-types.ts"
 import type { PairingStorage } from "./pairing-storage.ts"
 import { KeycardManager } from "./keycard-manager.ts"
+import KeycardEventEmitter from "./keycard-event-emitter.ts"
+import type { Callback, Subscription } from "./types/keycard-event-emitter-types.ts"
 
 export let Keycard = {
   Commandset: Commandset,
@@ -41,8 +43,9 @@ export let Keycard = {
   CryptoUtils: CryptoUtils,
   Constants: Constants,
   Identifiers: Identifiers,
-  KeycardManager: KeycardManager
+  KeycardManager: KeycardManager,
+  KeycardEventEmitter: KeycardEventEmitter
 }
 
-export { RecoverableSignatureTypes, PairingStorage };
+export { RecoverableSignatureTypes, PairingStorage, Callback, Subscription };
 export default Keycard;

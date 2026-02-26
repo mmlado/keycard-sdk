@@ -12,10 +12,10 @@ import { ApplicationStatus } from './application-status.ts';
 import { Constants } from './constants.ts';
 import { BIP32KeyPair } from './bip32key.ts';
 import { Mnemonic } from './mnemonic.ts';
+import KeycardEventEmitter from './keycard-event-emitter.ts';
 
 export const PAIRED = 0;
 export const LOADED = 1;
-export const defaultPairingPassword = "KeycardDefaultPairing";
 
 export const CardInitializeError = 0xca17;
 export const CardPairingError = 0xca61;
@@ -23,6 +23,13 @@ export const CardLoadKeyError = 0xca13;
 export const CardAuthenticationError = 0xcaa4;
 export const CardPinVerificationError = 0xca91;
 export const CardRequiredStateError = 0xca83;
+
+export const defaultPairingPassword = new Uint8Array([
+  0x67, 0x5d, 0xea, 0xbb, 0x0d, 0x7c, 0x72, 0x4b,
+  0x4a, 0x36, 0xca, 0xad, 0x0e, 0x28, 0x08, 0x26,
+  0x15, 0x9e, 0x89, 0x88, 0x6f, 0x70, 0x82, 0x53,
+  0x5d, 0x43, 0x1e, 0x92, 0x48, 0x48, 0xbc, 0xf1,
+]);
 
 export class KManagerError extends Error {
   cardData: any;
@@ -33,21 +40,23 @@ export class KManagerError extends Error {
   }
 }
 
-export class KeycardManager {
+export class KeycardManager  {
   pairingStorage: PairingStorage;
+  emitter: KeycardEventEmitter;
 
   constructor(storage: PairingStorage) {
+    this.emitter = new KeycardEventEmitter();
     this.pairingStorage = storage;
   }
 
   private generatePIN(): string {
-    let hexStr = toHex(randomBytes(3));
+    let hexStr = toHex(randomBytes(8));
     return parseInt(hexStr, 16).toString().substring(0, 6);
   }
 
   private generatePUK(): string {
-    let hexStr = toHex(randomBytes(5));
-    return (parseInt(hexStr, 16)).toString();
+    let hexStr = toHex(randomBytes(8));
+    return (parseInt(hexStr, 16)).toString().substring(0, 12);
   }
 
   private async verifyAuthenticity(cmdSet: Commandset, instanceUID: Uint8Array, skipVerificationUID: Uint8Array[], cardPubKeys: Uint8Array[]): Promise<boolean> {
@@ -84,7 +93,7 @@ export class KeycardManager {
     return false;
   }
 
-  private async tryAutoPair(pairingPassword: string, cmdSet: Commandset, pairingStorage: PairingStorage, uid: Uint8Array): Promise<{ paired: boolean, pairing: string | null }> {
+  private async tryAutoPair(pairingPassword: string | Uint8Array, cmdSet: Commandset, pairingStorage: PairingStorage, uid: Uint8Array): Promise<{ paired: boolean, pairing: string | null }> {
     try {
       await cmdSet.autoPair(pairingPassword);
       let pairing = cmdSet.getPairing().toBase64();
@@ -109,7 +118,7 @@ export class KeycardManager {
     let pukRetry: number;
     let pairing: string;
 
-    let sessionPairingPassword = defaultPairingPassword;
+    let sessionPairingPassword: string | Uint8Array = defaultPairingPassword;
 
     try {
       let cmdSet = new Commandset(channel);
@@ -138,6 +147,7 @@ export class KeycardManager {
           applicationInfo = new ApplicationInfo((await cmdSet.select()).checkOK().data);
           initialized = true;
           respData.cardInfo = applicationInfo;
+          this.emitter.emit("card-initialized", respData);
         } catch (err: any) {
           throw new KManagerError(`Card initialization error. ${err}.`, applicationInfo);
         }
@@ -160,6 +170,8 @@ export class KeycardManager {
           throw new KManagerError('Card is not authentic.', { data: respData });
         }
 
+        this.emitter.emit("card-authentic", respData);
+
         try {
           sessionPairingPassword = args.pairingPassword ? args.pairingPassword : sessionPairingPassword;
           let r = await this.tryAutoPair(sessionPairingPassword, cmdSet, this.pairingStorage, applicationInfo.instanceUID)
@@ -170,6 +182,7 @@ export class KeycardManager {
           if (r.pairing) {
             pairing = r.pairing;
           }
+          this.emitter.emit("card-paired", respData);
         } catch (err: any) {
           throw new KManagerError(`Card pairing error. ${err}`, { data: respData });
         }
@@ -184,6 +197,7 @@ export class KeycardManager {
 
         cmdSet.setPairing(Pairing.fromString(pairing!));
         (await cmdSet.autoOpenSecureChannel());
+        this.emitter.emit("secure-channel-opened", respData);
       } catch (err: any) {
         await this.pairingStorage.deletePairing(applicationInfo.instanceUID);
 
@@ -229,6 +243,7 @@ export class KeycardManager {
 
       try {
         (await cmdSet.verifyPIN(sessionPin)).checkAuthOK();
+        this.emitter.emit("card-pin-verified", respData);
       } catch (err: any) {
         if (err instanceof WrongPINException) {
           pinRetry--;
@@ -241,6 +256,7 @@ export class KeycardManager {
       if (state == PAIRED) {
         try {
           respData.cbFuncResponse = await cbFunc(cmdSet);
+          this.emitter.emit("cmd-executed", respData);
           return { status: 'success', data: respData };
         } catch (err: any) {
           throw new KManagerError(`Error executing callback function. ${err}`, { data: respData });
@@ -267,6 +283,7 @@ export class KeycardManager {
 
         try {
           respData.cbFuncResponse = await cbFunc(cmdSet);
+          this.emitter.emit("cmd-executed", respData);
           return { status: 'success', data: respData };
         } catch (err: any) {
           throw new KManagerError(`Error executing callback function. ${err}`, { data: respData });

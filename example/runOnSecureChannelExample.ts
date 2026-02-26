@@ -6,7 +6,7 @@ import { KManagerError, LOADED, PAIRED } from "../src/keycard-manager";
 import { Constants } from "../src/constants";
 import { Mnemonic } from "../src/mnemonic";
 import { Commandset } from "../src/commandset";
-import { KeycardManagerResponse } from "../src/types/keycard-manager-types";
+import { KeycardManagerResponse, KeycardManagerResponseData } from "../src/types/keycard-manager-types";
 
 const pcsc = pcsclite();
 
@@ -42,6 +42,22 @@ function createChannel(): any {
               const authCert = new Uint8Array([0x02, 0x9a, 0xb9, 0x9e, 0xe1, 0xe7, 0xa7, 0x1b, 0xdf, 0x45, 0xb3, 0xf9, 0xc5, 0x8c, 0x99, 0x86, 0x6f, 0xf1, 0x29, 0x4d, 0x2c, 0x1e, 0x30, 0x4e, 0x22, 0x8a, 0x86, 0xe1, 0x0c, 0x33, 0x43, 0x50, 0x1c]);
               const transactionData = new Uint8Array([0xf8, 0x6c, 0x80, 0x85, 0x04, 0xe3, 0xb2, 0x92, 0x00, 0x82, 0x52, 0x4c, 0x94, 0xc3, 0x90, 0xcc, 0x49, 0xa3, 0x27, 0x36, 0xa5, 0x87, 0x33, 0xcf, 0x46, 0xbe, 0x42, 0xf7, 0x34, 0xdd, 0x4f, 0x53, 0xcb, 0x88, 0x0d, 0xe0, 0xb6, 0xb3, 0xa7, 0x64, 0x00, 0x00, 0x01, 0x25, 0xa0, 0x5a, 0xb2, 0xf4, 0x8b, 0xdc, 0x67, 0x52, 0x19, 0x14, 0x40, 0xce, 0x62, 0x08, 0x8b, 0x9e, 0x42, 0xf2, 0x02, 0x15, 0xee, 0x43, 0x05, 0x40, 0x35, 0x79, 0xaa, 0x2e]);
               let response: KeycardManagerResponse;
+
+              keycardManager.emitter.subscribe("card-initialized", (data: KeycardManagerResponseData) => {
+                console.log("Card initialized");
+              });
+              keycardManager.emitter.subscribe("card-paired", (data: KeycardManagerResponseData) => {
+                console.log("Card paired");
+              });
+              keycardManager.emitter.subscribe("card-authentic", (data: KeycardManagerResponseData) => {
+                console.log("Card authenticity check success");
+              });
+              keycardManager.emitter.subscribe("card-pin-verified", (data: KeycardManagerResponseData) => {
+                console.log("Pin verification success");
+              });
+              keycardManager.emitter.subscribe("cmd-executed", (data: KeycardManagerResponseData) => {
+                console.log("Command executed succesfully");
+              });
 
               response = await keycardManager.runOnSecureChannel(
                 channel,

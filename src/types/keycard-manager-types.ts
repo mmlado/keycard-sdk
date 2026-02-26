@@ -8,7 +8,7 @@ export type KeycardManagerArgs = {
   newPuk?: string;
   newPairingPassword?: string;
   pin?: string;
-  pairingPassword?: string;
+  pairingPassword?: string | Uint8Array;
   mnemonic?: string;
 }
 
