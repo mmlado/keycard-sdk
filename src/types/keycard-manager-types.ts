@@ -6,7 +6,7 @@ export type KeycardManagerArgs = {
   newPin?: string;
   duressPin?: string;
   newPuk?: string;
-  newPairingPassword?: string;
+  newPairingPassword?: string | Uint8Array;
   pin?: string;
   pairingPassword?: string | Uint8Array;
   mnemonic?: string;
