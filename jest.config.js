@@ -5,4 +5,8 @@ export default {
   transform: {
     '^.+\\.tsx?$': ['ts-jest', { useESM: true }]
   },
+  moduleNameMapper: {
+    '^\\./(.+)\\.js$': './$1'
+  },
+  modulePathIgnorePatterns: ['node_modules/'],
 };
