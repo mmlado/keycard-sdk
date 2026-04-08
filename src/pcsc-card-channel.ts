@@ -2,7 +2,16 @@ import { CardChannel } from "./card-channel.ts"
 import { APDUResponse } from "./apdu-response.ts";
 import { APDUCommand } from "./apdu-command.ts";
 import { CardIOError } from "./apdu-exception.ts"
-import { CardReader } from "@nonth/pcsclite";
+
+type CardReader = {
+  transmit(
+    cmd: Buffer,
+    responseLength: number,
+    protocol: number,
+    callback: (error: Error | null, response: Buffer) => void
+  ): void;
+};
+
 export class PCSCCardChannel implements CardChannel {
   cardChannel: CardReader;
   protocol: number;
@@ -27,7 +36,7 @@ export class PCSCCardChannel implements CardChannel {
 
   sendDataAsync(channel: CardReader, protocol: number, cmd: Buffer) : Promise<Buffer> {
     return new Promise(function(resolve,reject) {
-      channel.transmit(cmd, 255, protocol, function(error: Error, response: Buffer) {
+      channel.transmit(cmd, 255, protocol, function(error: Error | null, response: Buffer) {
         if (error) {
           reject(error);
         } else {
