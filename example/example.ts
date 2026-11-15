@@ -6,8 +6,12 @@ import process from "process";
 import { SIGN_P2_BIP340_SCHNORR } from "../dist/commandset.js";
 import { CryptoUtils } from "../dist/crypto-utils.js";
 import { GlobalPlatformCommandset } from "../dist/global-platform-commandset.js";
+import { SCP02Keys } from "../dist/scp02-keys.js";
 
 const pcsc = pcsclite();
+
+const ownCardManagerKey = new Uint8Array(16).fill(0x11);
+const ownCardManagerKeys = new SCP02Keys(ownCardManagerKey, ownCardManagerKey, ownCardManagerKey);
 
 const caPubKey = new Uint8Array([
   0x02, 0x58, 0x77, 0x22, 0x0a, 0xaa, 0xe6, 0xe5,
@@ -167,6 +171,12 @@ function createChannel(): any {
               let gpCmdSet = new GlobalPlatformCommandset(channel);
               let isdFci = (await gpCmdSet.select(isdAid)).checkOK().data;
               console.log("Card manager FCI: " + hx(isdFci));
+
+              console.log("Opening the card manager's secure channel");
+              await gpCmdSet.openSecureChannel(false, [ownCardManagerKeys]);
+              let session = gpCmdSet.scp02Session;
+              let matched = session.fallbackKeys ? "GlobalPlatform default" : (session.staticKeys === ownCardManagerKeys ? "own key" : "development key");
+              console.log("Card manager key: " + matched);
 
               process.exit(0);
             }
