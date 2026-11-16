@@ -6,6 +6,7 @@ import process from "process";
 import { SIGN_P2_BIP340_SCHNORR } from "../dist/commandset.js";
 import { CryptoUtils } from "../dist/crypto-utils.js";
 import { GlobalPlatformCommandset } from "../dist/global-platform-commandset.js";
+import { GlobalPlatformConstants } from "../dist/global-platform-constants.js";
 import { SCP02Keys } from "../dist/scp02-keys.js";
 
 const pcsc = pcsclite();
@@ -171,6 +172,10 @@ function createChannel(): any {
               let gpCmdSet = new GlobalPlatformCommandset(channel);
               let isdFci = (await gpCmdSet.select(isdAid)).checkOK().data;
               console.log("Card manager FCI: " + hx(isdFci));
+
+              console.log("Reading the card manager's key information template");
+              let keyInfo = (await gpCmdSet.getData(GlobalPlatformConstants.GET_DATA_KEY_INFORMATION_TEMPLATE)).checkOK().data;
+              console.log("Key information template: " + hx(keyInfo));
 
               console.log("Opening the card manager's secure channel");
               await gpCmdSet.openSecureChannel(false, [ownCardManagerKeys]);
