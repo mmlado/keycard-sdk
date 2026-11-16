@@ -183,6 +183,10 @@ function createChannel(): any {
               let matched = session.fallbackKeys ? "GlobalPlatform default" : (session.staticKeys === ownCardManagerKeys ? "own key" : "development key");
               console.log("Card manager key: " + matched);
 
+              console.log("Reading the card manager's status");
+              let isdStatus = (await gpCmdSet.getStatus(GlobalPlatformConstants.GET_STATUS_P1_ISD)).checkOK().data;
+              console.log("Card manager status: " + hx(isdStatus));
+
               process.exit(0);
             }
           } catch (err) {
